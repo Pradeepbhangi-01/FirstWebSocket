@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testing the Websocket</title>
+  </head>
+  <body>
+    <div class="chat-conatiner">
+      <div id="message-list">
+        <!-- list will conatine messages -->
+      </div>
+
+      <input type="text" id="message-input" />
+      <button id="send-button">send</button>
+    </div>
+
+    <script src="http://localhost:3400/socket.io/socket.io.js"></script>
+
+    <script>
+      // socket code in js.
+      const socket = io.connect("http://localhost:3400");
+
+      // for getting the name of client
+
+      const username = prompt("Enter the name");
+
+      socket.emit("join", username);
+
+      // get the Elements
+
+      const messageInput = document.getElementById("message-input");
+      const messageList = document.getElementById("message-list");
+      const sendButton = document.getElementById("send-button");
+
+      sendButton.addEventListener("click", () => {
+        // read the message
+        const message = messageInput.value;
+        if (message) {
+          socket.emit("new_message", message);
+          // adding the message to the message list
+          const messageElement = document.createElement("div");
+          messageElement.innerHTML = `${username}: ${message}`;
+          messageList.appendChild(messageElement);
+          messageInput.value = "";
+        }
+      });
+
+      // getting the old message
+
+      socket.on("old_messages", (oldMessages) => {
+        oldMessages.forEach((oldMessage) => {
+          const messageElement = document.createElement("div");
+          messageElement.innerHTML = `${new Date(
+            oldMessage.timeStamp
+          ).toDateString()} - ${oldMessage.username}: ${oldMessage.message}`;
+          messageList.appendChild(messageElement);
+        });
+      });
+
+      // listen the message broadcast message
+
+      socket.on("broadcast_message", (userMessage) => {
+        const messageElement = document.createElement("div");
+        messageElement.innerHTML = `${userMessage.username}: ${userMessage.message}`;
+        messageList.appendChild(messageElement);
+      });
+    </script>
+  </body>
+</html>
